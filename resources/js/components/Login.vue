@@ -18,7 +18,7 @@
               </v-toolbar>
               <v-card-text>
                 <v-form
-                ref="form"
+                ref="login"
                 v-model="valid"
                 :lazy-validation=false
                 >
@@ -47,7 +47,7 @@
                 </v-form>
               </v-card-text>
               <v-card-actions>
-                <v-btn type="submit" :disabled="!valid" color="error" class="ml-4" @click="login">Login</v-btn>
+                <v-btn type="submit" :loading="btnloading" color="error" class="ml-4" @click="login">Login</v-btn>
                 <v-spacer />
                 <v-btn color="success" class="mr-3">Register</v-btn>
               </v-card-actions>
@@ -83,6 +83,7 @@ export default {
   },
   data() {
     return {
+      btnloading: false,
       valid : false,
       showPassword: false,
       loading: false,
@@ -109,28 +110,34 @@ export default {
   },
   methods: {
     login: function(){
-      
+      if(this.$refs.login.validate()){
+        this.btnloading = true
+        this.loading = true
 
-      this.loading = true
 
-
-      axios.post('/api/login',{'email':this.email, 'password': this.password})
-      .then(res => {
-        if(res.data){                 
-          if(res.data.token){
-            this.loading = false
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('logged', true);
-            this.$router.push('/admin');
+        axios.post('/api/login',{'email':this.email, 'password': this.password})
+        .then(res => {
+          if(res.data){                 
+            if(res.data.token){
+              this.loading = false
+              localStorage.setItem('token', res.data.token);
+              localStorage.setItem('logged', true);
+              this.$router.push('/admin');
+            }
           }
-        }
-      })
-      .catch(err => {        
-        this.text = err.response.data.message
-        this.snackbar = true
-        this.loading = false        
+        })
+        .catch(err => {    
+          this.btnloading = false   
+          this.text = err.response.data.message
+          this.snackbar = true
+          this.loading = false        
 
-      })
+        })
+
+      }
+
+
+      
     }
   }
 };

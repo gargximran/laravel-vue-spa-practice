@@ -24,12 +24,36 @@ const  routes = [
                 component : RolesComponent,
                 name : "Roles"
             }
-        ]
+        ],
+        beforeEnter: (to, from, next) => {
+            axios.get('/api/verify')
+            .then(res => {
+                return next()
+            })
+            .catch(err => {
+                return next("/login")
+            })
+        }
+
+        
     },
     {
         path: '/login',
         component: Login,
-        name: 'Login'
+        name: 'Login',
+        beforeEnter: (to, from, next) => {
+            if(localStorage.getItem('token')){
+                axios.get('/api/verify')
+                .then(res => {
+                    return next("/admin")
+                })
+                .catch(err => {
+                    return next()
+                })
+            }
+            return next()
+            
+        }
         
     },
     {
@@ -51,4 +75,5 @@ router.beforeEach((to, from, next) => {
     window.axios.defaults.headers['Authorization'] = `Bearer ${token}`;
     return next()
   })
+
 export default router

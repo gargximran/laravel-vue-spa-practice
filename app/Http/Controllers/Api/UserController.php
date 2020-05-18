@@ -31,4 +31,8 @@ class UserController extends Controller
         }
     }
 
+    public function verify(Request $req){
+        return $req->user();
+    }
+
 }

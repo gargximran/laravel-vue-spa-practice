@@ -153,8 +153,7 @@
       logout(){
         localStorage.removeItem('token');
         localStorage.setItem('logout', true)
-        this.$router.push('/login')
-        .catch(err=> console.dir(err));
+        this.$router.push({name: "Login"})
       }
     }
   }

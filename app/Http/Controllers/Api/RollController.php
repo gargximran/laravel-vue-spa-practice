@@ -18,16 +18,7 @@ class RollController extends Controller
         return response()->json(["role" => Role::all()], 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
+    
     /**
      * Store a newly created resource in storage.
      *
@@ -36,7 +27,17 @@ class RollController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $role = new Role();
+        $role->name = $request->name;
+
+        $store = $role->save();
+    
+        if($store){
+            return response()->json(['role' => Role::orderBy('created_at', 'desc')->first()], 200);
+        }else{
+            return response()->json(['insert' => "failed"], 403);
+        }
+
     }
 
     /**
@@ -50,16 +51,7 @@ class RollController extends Controller
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Role  $role
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Role $role)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
@@ -70,7 +62,9 @@ class RollController extends Controller
      */
     public function update(Request $request, Role $role)
     {
-        //
+        $role->name = $request->name;
+        $role->save();
+        return response()->json(['role' => $role], 200);
     }
 
     /**
@@ -81,6 +75,6 @@ class RollController extends Controller
      */
     public function destroy(Role $role)
     {
-        //
+        return $role->delete();
     }
 }

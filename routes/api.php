@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['auth:sanctum'], 'namespace' => 'Api'], function(){
     Route::get('/roles', "RollController@index");
+    Route::post('/roles', "RollController@store");
+    Route::post('/roles/update/{role:id}', "RollController@update");
+    Route::delete('roles/delete/{role:id}', "RollController@destroy");
+    Route::get('/verify', 'UserController@verify');
 });
 
 

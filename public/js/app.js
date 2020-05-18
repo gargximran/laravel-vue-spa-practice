@@ -2086,8 +2086,8 @@ __webpack_require__.r(__webpack_exports__);
     logout: function logout() {
       localStorage.removeItem('token');
       localStorage.setItem('logout', true);
-      this.$router.push('/login')["catch"](function (err) {
-        return console.dir(err);
+      this.$router.push({
+        name: "Login"
       });
     }
   }
@@ -2188,6 +2188,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   data: function data() {
     return {
+      btnloading: false,
       valid: false,
       showPassword: false,
       loading: false,
@@ -2217,25 +2218,29 @@ __webpack_require__.r(__webpack_exports__);
     login: function login() {
       var _this = this;
 
-      this.loading = true;
-      axios.post('/api/login', {
-        'email': this.email,
-        'password': this.password
-      }).then(function (res) {
-        if (res.data) {
-          if (res.data.token) {
-            _this.loading = false;
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('logged', true);
+      if (this.$refs.login.validate()) {
+        this.btnloading = true;
+        this.loading = true;
+        axios.post('/api/login', {
+          'email': this.email,
+          'password': this.password
+        }).then(function (res) {
+          if (res.data) {
+            if (res.data.token) {
+              _this.loading = false;
+              localStorage.setItem('token', res.data.token);
+              localStorage.setItem('logged', true);
 
-            _this.$router.push('/admin');
+              _this.$router.push('/admin');
+            }
           }
-        }
-      })["catch"](function (err) {
-        _this.text = err.response.data.message;
-        _this.snackbar = true;
-        _this.loading = false;
-      });
+        })["catch"](function (err) {
+          _this.btnloading = false;
+          _this.text = err.response.data.message;
+          _this.snackbar = true;
+          _this.loading = false;
+        });
+      }
     }
   }
 });
@@ -2318,9 +2323,75 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      valid: true,
+      roleRules: [function (v) {
+        return !!v || "Required";
+      }, function (v) {
+        return v.length > 2 || "Too sort";
+      }, function (v) {
+        return v.length < 12 || "Too long";
+      }],
+      LoaderColor: '',
+      toDelete: '',
+      deleteItemDialog: false,
+      saveTextLoader: '',
+      loadingloder: false,
+      snackbarClass: '',
+      snackbar: false,
+      text: '',
       loading: false,
       dialog: false,
       headers: [{
@@ -2345,20 +2416,16 @@ __webpack_require__.r(__webpack_exports__);
       roles: [],
       editedIndex: -1,
       editedItem: {
-        name: "",
-        created_at: 0,
-        updated_at: 0
+        name: ""
       },
       defaultItem: {
-        name: "",
-        created_at: 0,
-        updated_at: 0
+        name: ""
       }
     };
   },
   computed: {
     formTitle: function formTitle() {
-      return this.editedIndex === -1 ? "New Item" : "Edit Item";
+      return this.editedIndex === -1 ? "New Role" : "Edit Role";
     }
   },
   watch: {
@@ -2384,31 +2451,87 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     editItem: function editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
+      this.editedIndex = this.roles.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
-    deleteItem: function deleteItem(item) {
-      var index = this.desserts.indexOf(item);
-      confirm("Are you sure you want to delete this item?") && this.desserts.splice(index, 1);
+    openModal: function openModal(item) {
+      this.deleteItemDialog = true, this.toDelete = item.id;
+      this.editedIndex = this.roles.indexOf(item);
+    },
+    deleteItem: function deleteItem() {
+      var _this2 = this;
+
+      var deletedIndex = this.editedIndex;
+      this.deleteItemDialog = false, this.LoaderColor = "error", this.saveTextLoader = "Role deleting...Please wait", this.loadingloder = true, axios["delete"]("/api/roles/delete/" + this.toDelete).then(function (res) {
+        _this2.roles.splice(deletedIndex, 1);
+
+        _this2.loadingloder = false;
+        _this2.snackbarClass = 'red--text';
+        _this2.text = 'Role Deleted!';
+        _this2.snackbar = true;
+      })["catch"](function (err) {
+        _this2.loadingloder = false;
+        _this2.snackbarClass = 'white--text';
+        _this2.text = 'Role Delete failed!';
+        _this2.snackbar = true;
+        console.dir(err);
+      });
     },
     close: function close() {
-      var _this2 = this;
+      var _this3 = this;
 
       this.dialog = false;
       this.$nextTick(function () {
-        _this2.editedItem = Object.assign({}, _this2.defaultItem);
-        _this2.editedIndex = -1;
+        _this3.editedItem = Object.assign({}, _this3.defaultItem);
+        _this3.editedIndex = -1;
       });
     },
     save: function save() {
-      if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem);
-      } else {
-        this.desserts.push(this.editedItem);
-      }
+      var _this4 = this;
 
-      this.close();
+      if (this.$refs.roleForm.validate()) {
+        this.dialog = false;
+        this.loadingloder = true;
+        var editedItemIndex = this.editedIndex;
+
+        if (this.editedIndex > -1) {
+          this.LoaderColor = "info", this.saveTextLoader = "Role updating...Please wait";
+          axios.post('/api/roles/update/' + this.editedItem.id, {
+            name: this.editedItem.name
+          }).then(function (res) {
+            _this4.roles.splice(editedItemIndex, 1, res.data.role);
+
+            _this4.loadingloder = false;
+            _this4.snackbarClass = 'info--text';
+            _this4.text = 'Role Edited!';
+            _this4.snackbar = true;
+          })["catch"](function (err) {
+            _this4.loadingloder = false;
+            _this4.snackbarClass = 'red--text';
+            _this4.text = 'Role Edit Failed!';
+            _this4.snackbar = true;
+            console.dir(err);
+          });
+        } else {
+          this.LoaderColor = "primary", this.saveTextLoader = "New role creating...Please wait";
+          axios.post('/api/roles', {
+            name: this.editedItem.name
+          }).then(function (res) {
+            _this4.roles.push(res.data.role);
+
+            _this4.loadingloder = false;
+            _this4.snackbarClass = 'indigo--text';
+            _this4.text = 'Role added succesfully';
+            _this4.snackbar = true;
+          })["catch"](function (err) {
+            _this4.loadingloder = false;
+            _this4.snackbarClass = 'red--text';
+            _this4.text = 'Role add failed';
+            _this4.snackbar = true;
+          });
+        }
+      }
     }
   }
 });
@@ -2463,27 +2586,14 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
-  name: 'vueti',
+  name: 'Vueti',
   data: function data() {
     return {
-      drawer: false,
-      list: [{
-        name: 'Imran Hossain',
-        trole: "web developer",
-        ruote: '/'
-      }, {
-        name: 'Raihan Khan',
-        role: "graphics Designer",
-        ruote: '/'
-      }, {
-        name: 'Arif Hasan',
-        role: "App developer",
-        ruote: '/'
-      }, {
-        name: 'Arif Hasan',
-        role: "App developer",
-        ruote: '/'
+      dialog: false,
+      Inputrule: [function (v) {
+        return v.length < 4 || "Input field is not valid";
       }]
     };
   },
@@ -20446,7 +20556,7 @@ var render = function() {
                               _c(
                                 "v-form",
                                 {
-                                  ref: "form",
+                                  ref: "login",
                                   attrs: { "lazy-validation": false },
                                   model: {
                                     value: _vm.valid,
@@ -20519,7 +20629,7 @@ var render = function() {
                                   staticClass: "ml-4",
                                   attrs: {
                                     type: "submit",
-                                    disabled: !_vm.valid,
+                                    loading: _vm.btnloading,
                                     color: "error"
                                   },
                                   on: { click: _vm.login }
@@ -20618,205 +20728,178 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("v-data-table", {
-    staticClass: "elevation-1",
-    attrs: {
-      headers: _vm.headers,
-      items: _vm.roles,
-      "sort-by": "calories",
-      "item-key": "id",
-      loading: _vm.loading,
-      "loading-text": "Loading... Please wait"
-    },
-    scopedSlots: _vm._u([
-      {
-        key: "top",
-        fn: function() {
-          return [
-            _c(
-              "v-toolbar",
-              { attrs: { flat: "", color: "red " } },
-              [
-                _c("v-toolbar-title", [_vm._v("User Roles")]),
-                _vm._v(" "),
-                _c("v-divider", {
-                  staticClass: "mx-4",
-                  attrs: { inset: "", vertical: "" }
-                }),
-                _vm._v(" "),
-                _c("v-spacer"),
-                _vm._v(" "),
+  return _c(
+    "div",
+    [
+      _c("v-data-table", {
+        staticClass: "elevation-1",
+        attrs: {
+          headers: _vm.headers,
+          items: _vm.roles,
+          "sort-by": "calories",
+          "item-key": "id",
+          loading: _vm.loading,
+          "loading-text": "Loading... Please wait"
+        },
+        scopedSlots: _vm._u([
+          {
+            key: "top",
+            fn: function() {
+              return [
                 _c(
-                  "v-dialog",
-                  {
-                    attrs: { "max-width": "500px" },
-                    scopedSlots: _vm._u([
-                      {
-                        key: "activator",
-                        fn: function(ref) {
-                          var on = ref.on
-                          return [
-                            _c(
-                              "v-btn",
-                              _vm._g(
-                                {
-                                  staticClass: "mb-2",
-                                  attrs: { color: "primary", dark: "" }
-                                },
-                                on
-                              ),
-                              [_vm._v("New Item")]
-                            )
-                          ]
-                        }
-                      }
-                    ]),
-                    model: {
-                      value: _vm.dialog,
-                      callback: function($$v) {
-                        _vm.dialog = $$v
-                      },
-                      expression: "dialog"
-                    }
-                  },
+                  "v-toolbar",
+                  { attrs: { flat: "", color: "secondary " } },
                   [
+                    _c("v-toolbar-title", [_vm._v("User Roles")]),
+                    _vm._v(" "),
+                    _c("v-divider", {
+                      staticClass: "mx-4",
+                      attrs: { inset: "", vertical: "" }
+                    }),
+                    _vm._v(" "),
+                    _c("v-spacer"),
                     _vm._v(" "),
                     _c(
-                      "v-card",
-                      [
-                        _c("v-card-title", [
-                          _c("span", { staticClass: "headline" }, [
-                            _vm._v(_vm._s(_vm.formTitle))
-                          ])
+                      "v-dialog",
+                      {
+                        attrs: { "max-width": "500px" },
+                        scopedSlots: _vm._u([
+                          {
+                            key: "activator",
+                            fn: function(ref) {
+                              var on = ref.on
+                              return [
+                                _c(
+                                  "v-btn",
+                                  _vm._g(
+                                    {
+                                      staticClass: "mb-2",
+                                      attrs: {
+                                        color: "gray darken-4",
+                                        dark: ""
+                                      }
+                                    },
+                                    on
+                                  ),
+                                  [_vm._v("New Role")]
+                                )
+                              ]
+                            }
+                          }
                         ]),
+                        model: {
+                          value: _vm.dialog,
+                          callback: function($$v) {
+                            _vm.dialog = $$v
+                          },
+                          expression: "dialog"
+                        }
+                      },
+                      [
                         _vm._v(" "),
                         _c(
-                          "v-card-text",
+                          "v-form",
+                          {
+                            ref: "roleForm",
+                            attrs: { "lazy-validation": "" },
+                            model: {
+                              value: _vm.valid,
+                              callback: function($$v) {
+                                _vm.valid = $$v
+                              },
+                              expression: "valid"
+                            }
+                          },
                           [
                             _c(
-                              "v-container",
+                              "v-card",
                               [
+                                _c("v-card-title", [
+                                  _c("span", { staticClass: "subheader" }, [
+                                    _vm._v(_vm._s(_vm.formTitle))
+                                  ])
+                                ]),
+                                _vm._v(" "),
                                 _c(
-                                  "v-row",
+                                  "v-card-text",
                                   [
                                     _c(
-                                      "v-col",
-                                      {
-                                        attrs: { cols: "12", sm: "6", md: "4" }
-                                      },
+                                      "v-container",
                                       [
-                                        _c("v-text-field", {
-                                          attrs: { label: "Dessert name" },
-                                          model: {
-                                            value: _vm.editedItem.name,
-                                            callback: function($$v) {
-                                              _vm.$set(
-                                                _vm.editedItem,
-                                                "name",
-                                                $$v
-                                              )
-                                            },
-                                            expression: "editedItem.name"
-                                          }
-                                        })
+                                        _c(
+                                          "v-row",
+                                          [
+                                            _c(
+                                              "v-col",
+                                              {
+                                                attrs: {
+                                                  cols: "12",
+                                                  sm: "6",
+                                                  md: "4"
+                                                }
+                                              },
+                                              [
+                                                _c("v-text-field", {
+                                                  attrs: {
+                                                    rules: _vm.roleRules,
+                                                    error: "",
+                                                    label: "Name",
+                                                    "prepend-icon":
+                                                      "mdi-rename-box"
+                                                  },
+                                                  model: {
+                                                    value: _vm.editedItem.name,
+                                                    callback: function($$v) {
+                                                      _vm.$set(
+                                                        _vm.editedItem,
+                                                        "name",
+                                                        $$v
+                                                      )
+                                                    },
+                                                    expression:
+                                                      "editedItem.name"
+                                                  }
+                                                })
+                                              ],
+                                              1
+                                            )
+                                          ],
+                                          1
+                                        )
                                       ],
                                       1
+                                    )
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "v-card-actions",
+                                  [
+                                    _c("v-spacer"),
+                                    _vm._v(" "),
+                                    _c(
+                                      "v-btn",
+                                      {
+                                        attrs: {
+                                          color: "secondary darken-1",
+                                          text: ""
+                                        },
+                                        on: { click: _vm.close }
+                                      },
+                                      [_vm._v("Cancel")]
                                     ),
                                     _vm._v(" "),
                                     _c(
-                                      "v-col",
+                                      "v-btn",
                                       {
-                                        attrs: { cols: "12", sm: "6", md: "4" }
+                                        attrs: {
+                                          color: "error darken-1",
+                                          text: ""
+                                        },
+                                        on: { click: _vm.save }
                                       },
-                                      [
-                                        _c("v-text-field", {
-                                          attrs: { label: "Calories" },
-                                          model: {
-                                            value: _vm.editedItem.calories,
-                                            callback: function($$v) {
-                                              _vm.$set(
-                                                _vm.editedItem,
-                                                "calories",
-                                                $$v
-                                              )
-                                            },
-                                            expression: "editedItem.calories"
-                                          }
-                                        })
-                                      ],
-                                      1
-                                    ),
-                                    _vm._v(" "),
-                                    _c(
-                                      "v-col",
-                                      {
-                                        attrs: { cols: "12", sm: "6", md: "4" }
-                                      },
-                                      [
-                                        _c("v-text-field", {
-                                          attrs: { label: "Fat (g)" },
-                                          model: {
-                                            value: _vm.editedItem.fat,
-                                            callback: function($$v) {
-                                              _vm.$set(
-                                                _vm.editedItem,
-                                                "fat",
-                                                $$v
-                                              )
-                                            },
-                                            expression: "editedItem.fat"
-                                          }
-                                        })
-                                      ],
-                                      1
-                                    ),
-                                    _vm._v(" "),
-                                    _c(
-                                      "v-col",
-                                      {
-                                        attrs: { cols: "12", sm: "6", md: "4" }
-                                      },
-                                      [
-                                        _c("v-text-field", {
-                                          attrs: { label: "Carbs (g)" },
-                                          model: {
-                                            value: _vm.editedItem.carbs,
-                                            callback: function($$v) {
-                                              _vm.$set(
-                                                _vm.editedItem,
-                                                "carbs",
-                                                $$v
-                                              )
-                                            },
-                                            expression: "editedItem.carbs"
-                                          }
-                                        })
-                                      ],
-                                      1
-                                    ),
-                                    _vm._v(" "),
-                                    _c(
-                                      "v-col",
-                                      {
-                                        attrs: { cols: "12", sm: "6", md: "4" }
-                                      },
-                                      [
-                                        _c("v-text-field", {
-                                          attrs: { label: "Protein (g)" },
-                                          model: {
-                                            value: _vm.editedItem.protein,
-                                            callback: function($$v) {
-                                              _vm.$set(
-                                                _vm.editedItem,
-                                                "protein",
-                                                $$v
-                                              )
-                                            },
-                                            expression: "editedItem.protein"
-                                          }
-                                        })
-                                      ],
-                                      1
+                                      [_vm._v("Save")]
                                     )
                                   ],
                                   1
@@ -20826,30 +20909,43 @@ var render = function() {
                             )
                           ],
                           1
-                        ),
-                        _vm._v(" "),
+                        )
+                      ],
+                      1
+                    )
+                  ],
+                  1
+                ),
+                _vm._v(" "),
+                _c(
+                  "v-dialog",
+                  {
+                    attrs: { "hide-overlay": "", persistent: "", width: "300" },
+                    model: {
+                      value: _vm.loadingloder,
+                      callback: function($$v) {
+                        _vm.loadingloder = $$v
+                      },
+                      expression: "loadingloder"
+                    }
+                  },
+                  [
+                    _c(
+                      "v-card",
+                      { attrs: { color: _vm.LoaderColor, dark: "" } },
+                      [
                         _c(
-                          "v-card-actions",
+                          "v-card-text",
                           [
-                            _c("v-spacer"),
-                            _vm._v(" "),
-                            _c(
-                              "v-btn",
-                              {
-                                attrs: { color: "blue darken-1", text: "" },
-                                on: { click: _vm.close }
-                              },
-                              [_vm._v("Cancel")]
+                            _vm._v(
+                              "\r\n          " +
+                                _vm._s(_vm.saveTextLoader) +
+                                "\r\n            "
                             ),
-                            _vm._v(" "),
-                            _c(
-                              "v-btn",
-                              {
-                                attrs: { color: "blue darken-1", text: "" },
-                                on: { click: _vm.save }
-                              },
-                              [_vm._v("Save")]
-                            )
+                            _c("v-progress-linear", {
+                              staticClass: "mb-0",
+                              attrs: { indeterminate: "", color: "white" }
+                            })
                           ],
                           1
                         )
@@ -20858,63 +20954,166 @@ var render = function() {
                     )
                   ],
                   1
+                ),
+                _vm._v(" "),
+                _c(
+                  "v-snackbar",
+                  {
+                    class: _vm.snackbarClass,
+                    model: {
+                      value: _vm.snackbar,
+                      callback: function($$v) {
+                        _vm.snackbar = $$v
+                      },
+                      expression: "snackbar"
+                    }
+                  },
+                  [
+                    _vm._v(
+                      "\r\n              " +
+                        _vm._s(_vm.text) +
+                        "\r\n              "
+                    ),
+                    _c(
+                      "v-btn",
+                      {
+                        attrs: { small: "", icon: "", dark: "", text: "" },
+                        on: {
+                          click: function($event) {
+                            _vm.snackbar = false
+                          }
+                        }
+                      },
+                      [
+                        _c("v-icon", { staticClass: "white--text" }, [
+                          _vm._v("mdi-close-circle")
+                        ])
+                      ],
+                      1
+                    )
+                  ],
+                  1
                 )
-              ],
-              1
-            )
-          ]
+              ]
+            },
+            proxy: true
+          },
+          {
+            key: "item.actions",
+            fn: function(ref) {
+              var item = ref.item
+              return [
+                _c(
+                  "v-icon",
+                  {
+                    staticClass: "indigo--text mr-2",
+                    attrs: { small: "" },
+                    on: {
+                      click: function($event) {
+                        return _vm.editItem(item)
+                      }
+                    }
+                  },
+                  [_vm._v("mdi-pencil")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "v-icon",
+                  {
+                    staticClass: "red--text",
+                    attrs: { small: "" },
+                    on: {
+                      click: function($event) {
+                        return _vm.openModal(item)
+                      }
+                    }
+                  },
+                  [_vm._v("mdi-delete")]
+                )
+              ]
+            }
+          },
+          {
+            key: "no-data",
+            fn: function() {
+              return [
+                _c(
+                  "v-btn",
+                  {
+                    attrs: { color: "primary" },
+                    on: { click: _vm.initialize }
+                  },
+                  [_vm._v("Reset")]
+                )
+              ]
+            },
+            proxy: true
+          }
+        ])
+      }),
+      _vm._v(" "),
+      _c(
+        "v-dialog",
+        {
+          attrs: { "max-width": "500px" },
+          model: {
+            value: _vm.deleteItemDialog,
+            callback: function($$v) {
+              _vm.deleteItemDialog = $$v
+            },
+            expression: "deleteItemDialog"
+          }
         },
-        proxy: true
-      },
-      {
-        key: "item.actions",
-        fn: function(ref) {
-          var item = ref.item
-          return [
-            _c(
-              "v-icon",
-              {
-                staticClass: "mr-2",
-                attrs: { small: "" },
-                on: {
-                  click: function($event) {
-                    return _vm.editItem(item)
-                  }
-                }
-              },
-              [_vm._v("mdi-pencil")]
-            ),
-            _vm._v(" "),
-            _c(
-              "v-icon",
-              {
-                attrs: { small: "" },
-                on: {
-                  click: function($event) {
-                    return _vm.deleteItem(item)
-                  }
-                }
-              },
-              [_vm._v("mdi-delete")]
-            )
-          ]
-        }
-      },
-      {
-        key: "no-data",
-        fn: function() {
-          return [
-            _c(
-              "v-btn",
-              { attrs: { color: "primary" }, on: { click: _vm.initialize } },
-              [_vm._v("Reset")]
-            )
-          ]
-        },
-        proxy: true
-      }
-    ])
-  })
+        [
+          _c(
+            "v-card",
+            [
+              _c("v-card-title", [
+                _c("span", { staticClass: "subheader" }, [
+                  _vm._v("Delete Role?")
+                ])
+              ]),
+              _vm._v(" "),
+              _c(
+                "v-card-actions",
+                [
+                  _c("v-spacer"),
+                  _vm._v(" "),
+                  _c(
+                    "v-btn",
+                    {
+                      staticClass: "text-capitalize",
+                      attrs: { color: "secondary", text: "" },
+                      on: {
+                        click: function($event) {
+                          _vm.deleteItemDialog = false
+                        }
+                      }
+                    },
+                    [_vm._v("Cancel")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "v-btn",
+                    {
+                      staticClass: "text-capitalize",
+                      attrs: { color: "error darken-1", text: "" },
+                      on: { click: _vm.deleteItem }
+                    },
+                    [_vm._v("Yes! Delete")]
+                  )
+                ],
+                1
+              )
+            ],
+            1
+          )
+        ],
+        1
+      )
+    ],
+    1
+  )
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -20948,59 +21147,59 @@ var render = function() {
             "v-container",
             [
               _c(
-                "v-layout",
-                { attrs: { row: "", wrap: "" } },
-                _vm._l(_vm.list, function(person, index) {
-                  return _c(
-                    "v-flex",
-                    {
-                      key: index,
-                      attrs: { xs12: "", sm6: "", md4: "", lg3: "" }
+                "v-dialog",
+                {
+                  attrs: {
+                    "max-width": "600px",
+                    transition: "dialog-transition"
+                  },
+                  model: {
+                    value: _vm.dialog,
+                    callback: function($$v) {
+                      _vm.dialog = $$v
                     },
+                    expression: "dialog"
+                  }
+                },
+                [
+                  _c(
+                    "v-btn",
+                    {
+                      attrs: { slot: "activator", color: "success" },
+                      on: {
+                        click: function($event) {
+                          _vm.dialog = true
+                        }
+                      },
+                      slot: "activator"
+                    },
+                    [_vm._v("add new")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "v-card",
                     [
+                      _c("v-card-title", { attrs: { "primary-title": "" } }, [
+                        _vm._v(
+                          "\r\n                    This is the title of this form\r\n                "
+                        )
+                      ]),
+                      _vm._v(" "),
                       _c(
-                        "v-card",
-                        {
-                          staticClass: "text-center ma-3",
-                          attrs: { flat: "", hover: "" }
-                        },
+                        "v-card-text",
                         [
-                          _c("v-img", {
-                            staticClass:
-                              "white--text align-center justify-center",
-                            attrs: {
-                              height: "200",
-                              src:
-                                "https://cdn.vuetifyjs.com/images/cards/docks.jpg"
-                            }
-                          }),
-                          _vm._v(" "),
-                          _c("v-card-title", [_vm._v("Hello I am subtitle")]),
-                          _vm._v(" "),
-                          _c("v-card-text", [
-                            _vm._v(
-                              "\r\n                            Hello I am ttext of this cals and I love lto be ths sthelkfsdm sdlfj s dl lsjdfl l skdjfi nslkjdff lsdfj oi sldjff lskdff \r\n                        "
-                            )
-                          ]),
-                          _vm._v(" "),
-                          _c("v-divider"),
-                          _vm._v(" "),
                           _c(
-                            "v-card-actions",
+                            "v-form",
+                            { staticClass: "px-3" },
                             [
-                              _c("v-btn", { attrs: { color: "success" } }, [
-                                _vm._v("text")
-                              ]),
-                              _vm._v(" "),
-                              _c("v-btn", { attrs: { color: "success" } }, [
-                                _vm._v("text")
-                              ]),
-                              _vm._v(" "),
-                              _c("v-spacer"),
-                              _vm._v(" "),
-                              _c("v-btn", { attrs: { color: "success" } }, [
-                                _vm._v("text")
-                              ])
+                              _c("v-text-field", {
+                                attrs: {
+                                  rules: _vm.Inputrule,
+                                  name: "name",
+                                  label: "Title",
+                                  id: "id"
+                                }
+                              })
                             ],
                             1
                           )
@@ -21010,7 +21209,7 @@ var render = function() {
                     ],
                     1
                   )
-                }),
+                ],
                 1
               )
             ],
@@ -78205,11 +78404,29 @@ var routes = [{
     path: 'roles',
     component: _components_RolesComponent__WEBPACK_IMPORTED_MODULE_4__["default"],
     name: "Roles"
-  }]
+  }],
+  beforeEnter: function beforeEnter(to, from, next) {
+    axios.get('/api/verify').then(function (res) {
+      return next();
+    })["catch"](function (err) {
+      return next("/login");
+    });
+  }
 }, {
   path: '/login',
   component: _components_Login__WEBPACK_IMPORTED_MODULE_3__["default"],
-  name: 'Login'
+  name: 'Login',
+  beforeEnter: function beforeEnter(to, from, next) {
+    if (localStorage.getItem('token')) {
+      axios.get('/api/verify').then(function (res) {
+        return next("/admin");
+      })["catch"](function (err) {
+        return next();
+      });
+    }
+
+    return next();
+  }
 }, {
   path: '/vuetify',
   component: _components_Vueti__WEBPACK_IMPORTED_MODULE_5__["default"],

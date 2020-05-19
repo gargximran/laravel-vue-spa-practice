@@ -35,4 +35,9 @@ class UserController extends Controller
         return $req->user();
     }
 
+    public function logout(Request $req, $auth){
+       
+        return $req->user()->tokens()->where("id", $auth)->delete();
+    }
+
 }

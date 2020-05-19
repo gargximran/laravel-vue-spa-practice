@@ -2008,86 +2008,85 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
     source: String
   },
   data: function data() {
     return {
+      theme: true,
       drawer: null,
       items: [{
-        icon: 'mdi-trending-up',
-        text: 'Most Popular',
-        path: ''
+        icon: "mdi-trending-up",
+        text: "Most Popular",
+        path: ""
       }, {
-        icon: 'mdi-youtube-subscription',
-        text: 'Subscriptions',
-        path: ''
+        icon: "mdi-youtube-subscription",
+        text: "Subscriptions",
+        path: ""
       }, {
-        icon: 'mdi-history',
-        text: 'History',
-        path: ''
+        icon: "mdi-history",
+        text: "History",
+        path: ""
       }, {
-        icon: 'mdi-playlist-play',
-        text: 'Playlists',
-        path: ''
+        icon: "mdi-playlist-play",
+        text: "Playlists",
+        path: ""
       }, {
-        icon: 'mdi-teach',
-        text: 'Roles',
-        path: '/admin/roles'
+        icon: "mdi-teach",
+        text: "Roles",
+        path: "/admin/roles"
       }],
       items2: [{
         picture: 28,
-        text: 'Joseph'
+        text: "Joseph"
       }, {
         picture: 38,
-        text: 'Apple'
+        text: "Apple"
       }, {
         picture: 48,
-        text: 'Xbox Ahoy'
+        text: "Xbox Ahoy"
       }, {
         picture: 58,
-        text: 'Nokia'
+        text: "Nokia"
       }, {
         picture: 78,
-        text: 'MKBHD'
+        text: "MKBHD"
       }],
       snackbar: false
     };
+  },
+  watch: {
+    theme: function theme(old, newval) {
+      this.$vuetify.theme.dark = old;
+    }
   },
   created: function created() {
     this.$vuetify.theme.dark = true;
   },
   mounted: function mounted() {
-    this.snackbar = localStorage.getItem('logged') ? true : false;
-    localStorage.removeItem('logged');
+    this.snackbar = localStorage.getItem("logged") ? true : false;
+    localStorage.removeItem("logged");
   },
   methods: {
     logout: function logout() {
-      localStorage.removeItem('token');
-      localStorage.setItem('logout', true);
-      this.$router.push({
-        name: "Login"
+      var _this = this;
+
+      var tk = localStorage.getItem("token").split("|");
+      axios.get("/api/logout/" + tk[0]).then(function (res) {
+        localStorage.removeItem("token");
+        localStorage.setItem("logout", true);
+
+        _this.$router.push({
+          name: "Login"
+        });
+      })["catch"](function (err) {
+        localStorage.removeItem("token");
+        localStorage.setItem("logout", true);
+
+        _this.$router.push({
+          name: "Login"
+        });
       });
     }
   }
@@ -2231,7 +2230,9 @@ __webpack_require__.r(__webpack_exports__);
               localStorage.setItem('token', res.data.token);
               localStorage.setItem('logged', true);
 
-              _this.$router.push('/admin');
+              _this.$router.push({
+                name: "Admin"
+              });
             }
           }
         })["catch"](function (err) {
@@ -2373,9 +2374,43 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      searchIt: "",
       valid: true,
       roleRules: [function (v) {
         return !!v || "Required";
@@ -2384,14 +2419,14 @@ __webpack_require__.r(__webpack_exports__);
       }, function (v) {
         return v.length < 12 || "Too long";
       }],
-      LoaderColor: '',
-      toDelete: '',
+      LoaderColor: "",
+      toDelete: "",
       deleteItemDialog: false,
-      saveTextLoader: '',
+      saveTextLoader: "",
       loadingloder: false,
-      snackbarClass: '',
+      snackbarClass: "",
       snackbar: false,
-      text: '',
+      text: "",
       loading: false,
       dialog: false,
       headers: [{
@@ -2438,42 +2473,64 @@ __webpack_require__.r(__webpack_exports__);
     this.initialize();
   },
   methods: {
-    initialize: function initialize() {
+    search: function search(v) {
+      if (v.length > 2) {
+        this.searchIt = v;
+        this.paginate({
+          itemsPerPage: 5,
+          page: 1
+        });
+      }
+
+      if (v.length === 0) {
+        this.searchIt = "";
+        this.paginate({
+          itemsPerPage: 10,
+          page: 1
+        });
+      }
+    },
+    paginate: function paginate(e) {
       var _this = this;
 
-      axios.get('/api/roles', {}).then(function (res) {
+      axios.get("/api/roles?page=" + e.page, {
+        params: {
+          per_page: e.itemsPerPage,
+          search: this.searchIt
+        }
+      }).then(function (res) {
         _this.roles = res.data.role;
         _this.loading = false;
       })["catch"](function (err) {
         if (err.response.status === 401) {
-          _this.$router.push('/login');
+          _this.$router.push("/login");
         }
       });
     },
     editItem: function editItem(item) {
-      this.editedIndex = this.roles.indexOf(item);
+      this.editedIndex = this.roles.data.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
     openModal: function openModal(item) {
       this.deleteItemDialog = true, this.toDelete = item.id;
-      this.editedIndex = this.roles.indexOf(item);
+      this.editedIndex = this.roles.data.indexOf(item);
     },
     deleteItem: function deleteItem() {
       var _this2 = this;
 
       var deletedIndex = this.editedIndex;
       this.deleteItemDialog = false, this.LoaderColor = "error", this.saveTextLoader = "Role deleting...Please wait", this.loadingloder = true, axios["delete"]("/api/roles/delete/" + this.toDelete).then(function (res) {
-        _this2.roles.splice(deletedIndex, 1);
+        _this2.roles.data.splice(deletedIndex, 1);
 
         _this2.loadingloder = false;
-        _this2.snackbarClass = 'red--text';
-        _this2.text = 'Role Deleted!';
+        _this2.snackbarClass = "red--text";
+        _this2.text = "Role Deleted!";
         _this2.snackbar = true;
       })["catch"](function (err) {
         _this2.loadingloder = false;
-        _this2.snackbarClass = 'white--text';
-        _this2.text = 'Role Delete failed!';
+        _this2.snackbarClass = "white--text";
+        _this2.text = "Role Delete failed!";
         _this2.snackbar = true;
         console.dir(err);
       });
@@ -2497,37 +2554,37 @@ __webpack_require__.r(__webpack_exports__);
 
         if (this.editedIndex > -1) {
           this.LoaderColor = "info", this.saveTextLoader = "Role updating...Please wait";
-          axios.post('/api/roles/update/' + this.editedItem.id, {
+          axios.post("/api/roles/update/" + this.editedItem.id, {
             name: this.editedItem.name
           }).then(function (res) {
-            _this4.roles.splice(editedItemIndex, 1, res.data.role);
+            _this4.roles.data.splice(editedItemIndex, 1, res.data.role);
 
             _this4.loadingloder = false;
-            _this4.snackbarClass = 'info--text';
-            _this4.text = 'Role Edited!';
+            _this4.snackbarClass = "info--text";
+            _this4.text = "Role Edited!";
             _this4.snackbar = true;
           })["catch"](function (err) {
             _this4.loadingloder = false;
-            _this4.snackbarClass = 'red--text';
-            _this4.text = 'Role Edit Failed!';
+            _this4.snackbarClass = "red--text";
+            _this4.text = "Role Edit Failed!";
             _this4.snackbar = true;
             console.dir(err);
           });
         } else {
           this.LoaderColor = "primary", this.saveTextLoader = "New role creating...Please wait";
-          axios.post('/api/roles', {
+          axios.post("/api/roles", {
             name: this.editedItem.name
           }).then(function (res) {
-            _this4.roles.push(res.data.role);
+            _this4.roles.data.push(res.data.role);
 
             _this4.loadingloder = false;
-            _this4.snackbarClass = 'indigo--text';
-            _this4.text = 'Role added succesfully';
+            _this4.snackbarClass = "indigo--text";
+            _this4.text = "Role added succesfully";
             _this4.snackbar = true;
           })["catch"](function (err) {
             _this4.loadingloder = false;
-            _this4.snackbarClass = 'red--text';
-            _this4.text = 'Role add failed';
+            _this4.snackbarClass = "red--text";
+            _this4.text = "Role add failed";
             _this4.snackbar = true;
           });
         }
@@ -20241,9 +20298,9 @@ var render = function() {
                       [
                         _c("v-list-item-title", [
                           _vm._v(
-                            "\n              " +
+                            "\n                        " +
                               _vm._s(item.text) +
-                              "\n            "
+                              "\n                    "
                           )
                         ])
                       ],
@@ -20293,21 +20350,16 @@ var render = function() {
                 "v-list-item",
                 { staticClass: "mt-4", attrs: { link: "" } },
                 [
-                  _c(
-                    "v-list-item-action",
-                    [
-                      _c("v-icon", { attrs: { color: "grey darken-1" } }, [
-                        _vm._v("mdi-plus-circle-outline")
-                      ])
-                    ],
-                    1
-                  ),
-                  _vm._v(" "),
-                  _c(
-                    "v-list-item-title",
-                    { staticClass: "grey--text text--darken-1" },
-                    [_vm._v("Browse Channels")]
-                  )
+                  _c("v-switch", {
+                    attrs: { label: "Switch Theme" },
+                    model: {
+                      value: _vm.theme,
+                      callback: function($$v) {
+                        _vm.theme = $$v
+                      },
+                      expression: "theme"
+                    }
+                  })
                 ],
                 1
               ),
@@ -20355,11 +20407,11 @@ var render = function() {
           }),
           _vm._v(" "),
           _c("v-icon", { staticClass: "mx-4", attrs: { large: "" } }, [
-            _vm._v("\n        mdi-youtube\n      ")
+            _vm._v("\n            mdi-laravel\n        ")
           ]),
           _vm._v(" "),
           _c("v-toolbar-title", { staticClass: "mr-12 align-center" }, [
-            _c("span", { staticClass: "title" }, [_vm._v("Youtube")])
+            _c("span", { staticClass: "title" }, [_vm._v("gXi - LaraVue")])
           ]),
           _vm._v(" "),
           _c("v-spacer"),
@@ -20416,7 +20468,7 @@ var render = function() {
                         },
                         [
                           _vm._v(
-                            "\n              Logged in succesfully!\n              "
+                            "\n                        Logged in succesfully!\n                        "
                           ),
                           _c(
                             "v-btn",
@@ -20735,12 +20787,20 @@ var render = function() {
         staticClass: "elevation-1",
         attrs: {
           headers: _vm.headers,
-          items: _vm.roles,
+          items: _vm.roles.data,
           "sort-by": "calories",
           "item-key": "id",
+          "server-items-length": _vm.roles.total,
           loading: _vm.loading,
-          "loading-text": "Loading... Please wait"
+          "loading-text": "Loading... Please wait",
+          "footer-props": {
+            "items-per-page-options": [5, 10, 15],
+            "items-per-page-text": "Roles per page",
+            "show-first-last-page": true,
+            "show-current-page": true
+          }
         },
+        on: { pagination: _vm.paginate },
         scopedSlots: _vm._u([
           {
             key: "top",
@@ -20758,6 +20818,12 @@ var render = function() {
                     }),
                     _vm._v(" "),
                     _c("v-spacer"),
+                    _vm._v(" "),
+                    _c("v-text-field", {
+                      staticClass: "mt-5 px-4",
+                      attrs: { label: "Search...", error: "" },
+                      on: { input: _vm.search }
+                    }),
                     _vm._v(" "),
                     _c(
                       "v-dialog",
@@ -20938,9 +21004,9 @@ var render = function() {
                           "v-card-text",
                           [
                             _vm._v(
-                              "\r\n          " +
+                              "\n                        " +
                                 _vm._s(_vm.saveTextLoader) +
-                                "\r\n            "
+                                "\n                        "
                             ),
                             _c("v-progress-linear", {
                               staticClass: "mb-0",
@@ -20970,9 +21036,9 @@ var render = function() {
                   },
                   [
                     _vm._v(
-                      "\r\n              " +
+                      "\n                " +
                         _vm._s(_vm.text) +
-                        "\r\n              "
+                        "\n                "
                     ),
                     _c(
                       "v-btn",
@@ -78436,10 +78502,6 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
   routes: routes
 });
 router.beforeEach(function (to, from, next) {
-  if (to.name == 'Login') {
-    return next();
-  }
-
   var token = localStorage.getItem('token') || null;
   window.axios.defaults.headers['Authorization'] = "Bearer ".concat(token);
   return next();

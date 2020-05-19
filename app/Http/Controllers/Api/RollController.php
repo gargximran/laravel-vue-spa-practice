@@ -13,9 +13,18 @@ class RollController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $req)
     {
-        return response()->json(["role" => Role::all()], 200);
+        // if there any serch query then execute this
+        if(strlen($req->search) > 2){
+            $roles = Role::where('name', 'LIKE', "%$req->search%")->paginate($req->per_page);
+            return response()->json(['role'=> $roles], 200);
+        }
+        //if there is no search query then execute this
+        else{
+            return response()->json(["role" => Role::paginate($req->per_page)], 200);
+        }
+        
     }
 
     
@@ -46,9 +55,9 @@ class RollController extends Controller
      * @param  \App\Role  $role
      * @return \Illuminate\Http\Response
      */
-    public function show(Role $role)
+    public function show($search)
     {
-        //
+        
     }
 
 

@@ -28,6 +28,7 @@ const  routes = [
         beforeEnter: (to, from, next) => {
             axios.get('/api/verify')
             .then(res => {
+                
                 return next()
             })
             .catch(err => {
@@ -67,10 +68,7 @@ const  routes = [
 const router = new VueRouter({routes})
 
 router.beforeEach((to, from, next) => {
-    if(to.name == 'Login'){
-        return next()
-    }
-   
+
     const token = localStorage.getItem('token') || null
     window.axios.defaults.headers['Authorization'] = `Bearer ${token}`;
     return next()

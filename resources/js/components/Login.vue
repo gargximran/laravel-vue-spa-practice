@@ -122,7 +122,7 @@ export default {
               this.loading = false
               localStorage.setItem('token', res.data.token);
               localStorage.setItem('logged', true);
-              this.$router.push('/admin');
+              this.$router.push({name: "Admin"});
             }
           }
         })

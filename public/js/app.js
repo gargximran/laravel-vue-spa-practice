@@ -2075,16 +2075,15 @@ __webpack_require__.r(__webpack_exports__);
       var tk = localStorage.getItem("token").split("|");
       axios.get("/api/logout/" + tk[0]).then(function (res) {
         localStorage.removeItem("token");
+        localStorage.removeItem("logged");
         localStorage.setItem("logout", true);
-
-        _this.$router.push({
+        return _this.$router.push({
           name: "Login"
         });
       })["catch"](function (err) {
         localStorage.removeItem("token");
         localStorage.setItem("logout", true);
-
-        _this.$router.push({
+        return _this.$router.push({
           name: "Login"
         });
       });
@@ -2180,8 +2179,21 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
-  name: 'Login',
+  name: "Login",
   props: {
     source: String
   },
@@ -2194,11 +2206,11 @@ __webpack_require__.r(__webpack_exports__);
       email: "",
       password: "",
       snackbar: false,
-      text: '',
+      text: "",
       emailRules: [function (v) {
-        return !!v || 'E-mail is required';
+        return !!v || "E-mail is required";
       }, function (v) {
-        return /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'E-mail must be valid';
+        return /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || "E-mail must be valid";
       }],
       passwordRules: [function (v) {
         return !!v || "Password is required";
@@ -2209,30 +2221,48 @@ __webpack_require__.r(__webpack_exports__);
     this.$vuetify.theme.dark = false;
   },
   mounted: function mounted() {
-    this.text = localStorage.getItem('logout') ? "Logged out!" : '';
-    this.snackbar = localStorage.getItem('logout') ? true : false;
-    localStorage.removeItem('logout');
+    this.text = localStorage.getItem("logout") ? "Logged out!" : "";
+    this.snackbar = localStorage.getItem("logout") ? true : false;
+    localStorage.removeItem("logout");
   },
   methods: {
+    nextFocus: function nextFocus() {
+      if (event.target.nodeName === "INPUT") {
+        var form = event.target.form;
+
+        for (var i = 0; i < form.length; i++) {
+          if (event.target == form[i]) {
+            form.elements[i + 1].focus();
+            break;
+          }
+        }
+      }
+    },
     login: function login() {
       var _this = this;
 
       if (this.$refs.login.validate()) {
         this.btnloading = true;
         this.loading = true;
-        axios.post('/api/login', {
-          'email': this.email,
-          'password': this.password
+        axios.post("/api/login", {
+          email: this.email,
+          password: this.password
         }).then(function (res) {
           if (res.data) {
-            if (res.data.token) {
+            if (res.data.isAdmin && res.data.token) {
               _this.loading = false;
-              localStorage.setItem('token', res.data.token);
-              localStorage.setItem('logged', true);
-
-              _this.$router.push({
+              localStorage.setItem("token", res.data.token);
+              localStorage.setItem("logged", true);
+              _this.btnloading = false;
+              _this.loading = false;
+              return _this.$router.push({
                 name: "Admin"
               });
+            } else {
+              _this.text = "Please log in as admin";
+              _this.btnloading = false;
+              _this.loading = false;
+              return _this.snackbar = true;
             }
           }
         })["catch"](function (err) {
@@ -2407,9 +2437,21 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      deleteModalTitle: "Delete role?",
+      selectedRow: [],
+      selectedRowIndexForDelete: [],
       searchIt: "",
       valid: true,
       roleRules: [function (v) {
@@ -2470,9 +2512,19 @@ __webpack_require__.r(__webpack_exports__);
   },
   created: function created() {
     this.loading = true;
-    this.initialize();
   },
   methods: {
+    selectAll: function selectAll(v) {
+      var _this = this;
+
+      this.selectedRowIndexForDelete = [];
+      this.selectedRow = v.map(function (e) {
+        return e.id;
+      });
+      v.forEach(function (row) {
+        _this.selectedRowIndexForDelete.push(_this.roles.data.indexOf(row));
+      });
+    },
     search: function search(v) {
       if (v.length > 2) {
         this.searchIt = v;
@@ -2491,7 +2543,7 @@ __webpack_require__.r(__webpack_exports__);
       }
     },
     paginate: function paginate(e) {
-      var _this = this;
+      var _this2 = this;
 
       axios.get("/api/roles?page=" + e.page, {
         params: {
@@ -2499,11 +2551,11 @@ __webpack_require__.r(__webpack_exports__);
           search: this.searchIt
         }
       }).then(function (res) {
-        _this.roles = res.data.role;
-        _this.loading = false;
+        _this2.roles = res.data.role;
+        _this2.loading = false;
       })["catch"](function (err) {
         if (err.response.status === 401) {
-          _this.$router.push("/login");
+          _this2.$router.push("/login");
         }
       });
     },
@@ -2513,39 +2565,84 @@ __webpack_require__.r(__webpack_exports__);
       this.dialog = true;
     },
     openModal: function openModal(item) {
-      this.deleteItemDialog = true, this.toDelete = item.id;
+      if (!item.id) {
+        this.deleteModalTitle = "Delete selected roles?";
+        this.deleteItemDialog = true;
+        return;
+      }
+
+      this.deleteModalTitle = "Delete role?";
+      this.selectedRow = [];
+      this.selectedRowIndexForDelete = [];
+      this.deleteItemDialog = true;
+      this.toDelete = item.id;
       this.editedIndex = this.roles.data.indexOf(item);
     },
     deleteItem: function deleteItem() {
-      var _this2 = this;
+      var _this3 = this;
 
-      var deletedIndex = this.editedIndex;
-      this.deleteItemDialog = false, this.LoaderColor = "error", this.saveTextLoader = "Role deleting...Please wait", this.loadingloder = true, axios["delete"]("/api/roles/delete/" + this.toDelete).then(function (res) {
-        _this2.roles.data.splice(deletedIndex, 1);
+      this.deleteItemDialog = false;
+      this.LoaderColor = "error";
 
-        _this2.loadingloder = false;
-        _this2.snackbarClass = "red--text";
-        _this2.text = "Role Deleted!";
-        _this2.snackbar = true;
-      })["catch"](function (err) {
-        _this2.loadingloder = false;
-        _this2.snackbarClass = "white--text";
-        _this2.text = "Role Delete failed!";
-        _this2.snackbar = true;
-        console.dir(err);
-      });
+      if (this.selectedRow.length == 0) {
+        var deletedIndex = this.editedIndex;
+        this.saveTextLoader = "Role deleting...Please wait";
+        this.loadingloder = true;
+        axios["delete"]("/api/roles/delete/" + this.toDelete).then(function (res) {
+          _this3.roles.data.splice(deletedIndex, 1);
+
+          _this3.loadingloder = false;
+          _this3.snackbarClass = "red--text";
+          _this3.text = "Role Deleted!";
+          _this3.snackbar = true;
+          _this3.toDelete = "";
+        })["catch"](function (err) {
+          _this3.loadingloder = false;
+          _this3.snackbarClass = "white--text";
+          _this3.text = "Role Delete failed!";
+          _this3.snackbar = true;
+          console.dir(err);
+          _this3.toDelete = "";
+        });
+      } else {
+        this.saveTextLoader = "Deleting selected...Please wait";
+        this.loadingloder = true;
+        axios.post("/api/roles/delete/selected", {
+          selectedRole: this.selectedRow
+        }).then(function (res) {
+          _this3.selectedRow.forEach(function (value) {
+            _this3.roles.data = _this3.roles.data.filter(function (v) {
+              return v.id != value;
+            });
+          });
+
+          _this3.selectedRowIndexForDelete = [];
+          _this3.selectedRow = [];
+          _this3.loadingloder = false;
+          _this3.snackbarClass = "red--text";
+          _this3.text = "Selected roles deleted!";
+          _this3.snackbar = true;
+        })["catch"](function (err) {
+          _this3.selectedRowIndexForDelete = [];
+          _this3.selectedRow = [];
+          _this3.loadingloder = false;
+          _this3.snackbarClass = "white--text";
+          _this3.text = "Delete failed!";
+          _this3.snackbar = true;
+        });
+      }
     },
     close: function close() {
-      var _this3 = this;
+      var _this4 = this;
 
       this.dialog = false;
       this.$nextTick(function () {
-        _this3.editedItem = Object.assign({}, _this3.defaultItem);
-        _this3.editedIndex = -1;
+        _this4.editedItem = Object.assign({}, _this4.defaultItem);
+        _this4.editedIndex = -1;
       });
     },
     save: function save() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (this.$refs.roleForm.validate()) {
         this.dialog = false;
@@ -2557,17 +2654,17 @@ __webpack_require__.r(__webpack_exports__);
           axios.post("/api/roles/update/" + this.editedItem.id, {
             name: this.editedItem.name
           }).then(function (res) {
-            _this4.roles.data.splice(editedItemIndex, 1, res.data.role);
+            _this5.roles.data.splice(editedItemIndex, 1, res.data.role);
 
-            _this4.loadingloder = false;
-            _this4.snackbarClass = "info--text";
-            _this4.text = "Role Edited!";
-            _this4.snackbar = true;
+            _this5.loadingloder = false;
+            _this5.snackbarClass = "info--text";
+            _this5.text = "Role Edited!";
+            _this5.snackbar = true;
           })["catch"](function (err) {
-            _this4.loadingloder = false;
-            _this4.snackbarClass = "red--text";
-            _this4.text = "Role Edit Failed!";
-            _this4.snackbar = true;
+            _this5.loadingloder = false;
+            _this5.snackbarClass = "red--text";
+            _this5.text = "Role Edit Failed!";
+            _this5.snackbar = true;
             console.dir(err);
           });
         } else {
@@ -2575,17 +2672,17 @@ __webpack_require__.r(__webpack_exports__);
           axios.post("/api/roles", {
             name: this.editedItem.name
           }).then(function (res) {
-            _this4.roles.data.push(res.data.role);
+            _this5.roles.data.push(res.data.role);
 
-            _this4.loadingloder = false;
-            _this4.snackbarClass = "indigo--text";
-            _this4.text = "Role added succesfully";
-            _this4.snackbar = true;
+            _this5.loadingloder = false;
+            _this5.snackbarClass = "indigo--text";
+            _this5.text = "Role added succesfully";
+            _this5.snackbar = true;
           })["catch"](function (err) {
-            _this4.loadingloder = false;
-            _this4.snackbarClass = "red--text";
-            _this4.text = "Role add failed";
-            _this4.snackbar = true;
+            _this5.loadingloder = false;
+            _this5.snackbarClass = "red--text";
+            _this5.text = "Role add failed";
+            _this5.snackbar = true;
           });
         }
       }
@@ -20626,7 +20723,26 @@ var render = function() {
                                       "prepend-icon": "mdi-account-circle",
                                       type: "email",
                                       required: "",
-                                      rules: _vm.emailRules
+                                      rules: _vm.emailRules,
+                                      autofocus: ""
+                                    },
+                                    on: {
+                                      keyup: function($event) {
+                                        if (
+                                          !$event.type.indexOf("key") &&
+                                          _vm._k(
+                                            $event.keyCode,
+                                            "enter",
+                                            13,
+                                            $event.key,
+                                            "Enter"
+                                          )
+                                        ) {
+                                          return null
+                                        }
+                                        $event.preventDefault()
+                                        return _vm.nextFocus($event)
+                                      }
                                     },
                                     model: {
                                       value: _vm.email,
@@ -20641,6 +20757,7 @@ var render = function() {
                                     attrs: {
                                       color: "error",
                                       id: "password",
+                                      autocomplete: "",
                                       rules: _vm.passwordRules,
                                       label: "Password",
                                       "prepend-icon": "mdi-lock",
@@ -20653,6 +20770,21 @@ var render = function() {
                                       required: ""
                                     },
                                     on: {
+                                      keyup: function($event) {
+                                        if (
+                                          !$event.type.indexOf("key") &&
+                                          _vm._k(
+                                            $event.keyCode,
+                                            "enter",
+                                            13,
+                                            $event.key,
+                                            "Enter"
+                                          )
+                                        ) {
+                                          return null
+                                        }
+                                        return _vm.login($event)
+                                      },
                                       "click:append": function($event) {
                                         _vm.showPassword = !_vm.showPassword
                                       }
@@ -20723,7 +20855,9 @@ var render = function() {
                     },
                     [
                       _vm._v(
-                        "\n            " + _vm._s(_vm.text) + "\n            "
+                        "\n                    " +
+                          _vm._s(_vm.text) +
+                          "\n                    "
                       ),
                       _c(
                         "v-btn",
@@ -20786,6 +20920,8 @@ var render = function() {
       _c("v-data-table", {
         staticClass: "elevation-1",
         attrs: {
+          "fixed-header": "",
+          "show-select": "",
           headers: _vm.headers,
           items: _vm.roles.data,
           "sort-by": "calories",
@@ -20800,7 +20936,7 @@ var render = function() {
             "show-current-page": true
           }
         },
-        on: { pagination: _vm.paginate },
+        on: { input: _vm.selectAll, pagination: _vm.paginate },
         scopedSlots: _vm._u([
           {
             key: "top",
@@ -20816,6 +20952,22 @@ var render = function() {
                       staticClass: "mx-4",
                       attrs: { inset: "", vertical: "" }
                     }),
+                    _vm._v(" "),
+                    _vm.selectedRow.length > 0
+                      ? _c(
+                          "v-btn",
+                          {
+                            staticClass: "text-capitalize",
+                            attrs: {
+                              transition: "slide-x-transition",
+                              small: "",
+                              color: "error"
+                            },
+                            on: { click: _vm.openModal }
+                          },
+                          [_vm._v("Delete Selected")]
+                        )
+                      : _vm._e(),
                     _vm._v(" "),
                     _c("v-spacer"),
                     _vm._v(" "),
@@ -21098,22 +21250,6 @@ var render = function() {
                 )
               ]
             }
-          },
-          {
-            key: "no-data",
-            fn: function() {
-              return [
-                _c(
-                  "v-btn",
-                  {
-                    attrs: { color: "primary" },
-                    on: { click: _vm.initialize }
-                  },
-                  [_vm._v("Reset")]
-                )
-              ]
-            },
-            proxy: true
           }
         ])
       }),
@@ -21136,7 +21272,7 @@ var render = function() {
             [
               _c("v-card-title", [
                 _c("span", { staticClass: "subheader" }, [
-                  _vm._v("Delete Role?")
+                  _vm._v(_vm._s(_vm.deleteModalTitle))
                 ])
               ]),
               _vm._v(" "),
@@ -78460,31 +78596,35 @@ __webpack_require__.r(__webpack_exports__);
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]);
 var routes = [{
-  path: '/',
-  redirect: '/login'
+  path: "/",
+  redirect: "/login"
 }, {
-  path: '/admin',
+  path: "/admin",
   component: _components_AdminDashboard__WEBPACK_IMPORTED_MODULE_2__["default"],
-  name: 'Admin',
+  name: "Admin",
   children: [{
-    path: 'roles',
+    path: "roles",
     component: _components_RolesComponent__WEBPACK_IMPORTED_MODULE_4__["default"],
     name: "Roles"
   }],
   beforeEnter: function beforeEnter(to, from, next) {
-    axios.get('/api/verify').then(function (res) {
-      return next();
+    axios.get("/api/verify").then(function (res) {
+      if (res.data.role == "Admin") {
+        return next();
+      } else {
+        return next("/login");
+      }
     })["catch"](function (err) {
       return next("/login");
     });
   }
 }, {
-  path: '/login',
+  path: "/login",
   component: _components_Login__WEBPACK_IMPORTED_MODULE_3__["default"],
-  name: 'Login',
+  name: "Login",
   beforeEnter: function beforeEnter(to, from, next) {
-    if (localStorage.getItem('token')) {
-      axios.get('/api/verify').then(function (res) {
+    if (localStorage.getItem("token")) {
+      axios.get("/api/verify").then(function (res) {
         return next("/admin");
       })["catch"](function (err) {
         return next();
@@ -78494,16 +78634,16 @@ var routes = [{
     return next();
   }
 }, {
-  path: '/vuetify',
+  path: "/vuetify",
   component: _components_Vueti__WEBPACK_IMPORTED_MODULE_5__["default"],
-  name: 'Vueti'
+  name: "Vueti"
 }];
 var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
   routes: routes
 });
 router.beforeEach(function (to, from, next) {
-  var token = localStorage.getItem('token') || null;
-  window.axios.defaults.headers['Authorization'] = "Bearer ".concat(token);
+  var token = localStorage.getItem("token") || null;
+  window.axios.defaults.headers["Authorization"] = "Bearer ".concat(token);
   return next();
 });
 /* harmony default export */ __webpack_exports__["default"] = (router);

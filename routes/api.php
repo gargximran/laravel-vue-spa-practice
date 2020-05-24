@@ -34,6 +34,7 @@ Route::group(['middleware' => ['auth:sanctum'], 'namespace' => 'Api'], function(
 
     //delete role
     Route::delete('roles/delete/{role:id}', "RollController@destroy");
+    Route::post('roles/delete/selected' , "RollController@selectedDestroy");
 
 
 
@@ -43,11 +44,16 @@ Route::group(['middleware' => ['auth:sanctum'], 'namespace' => 'Api'], function(
      * all route are protected
      */
 
+     //Logout controll 
     Route::get('logout/{auth}', "UserController@logout");
+
+    // verify via header authorization the user exist or not
     Route::get('/verify', 'UserController@verify');
 });
 
 
 
+
+//Route for login
 Route::post('/login' , "Api\UserController@login");
 

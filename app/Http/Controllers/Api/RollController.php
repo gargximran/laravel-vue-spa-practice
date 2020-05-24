@@ -86,4 +86,8 @@ class RollController extends Controller
     {
         return $role->delete();
     }
+
+    public function selectedDestroy(Request $req){
+        return Role::whereIn("id", $req->selectedRole)->delete();
+    }
 }

@@ -1,6 +1,9 @@
 <template>
     <div>
         <v-data-table
+            fixed-header
+            show-select
+            @input="selectAll"
             :headers="headers"
             :items="roles.data"
             sort-by="calories"
@@ -21,6 +24,15 @@
                 <v-toolbar flat color="secondary ">
                     <v-toolbar-title>User Roles</v-toolbar-title>
                     <v-divider class="mx-4" inset vertical></v-divider>
+                    <v-btn
+                        transition="slide-x-transition"
+                        v-if="selectedRow.length > 0"
+                        class="text-capitalize"
+                        small
+                        color="error"
+                        @click="openModal"
+                        >Delete Selected</v-btn
+                    >
                     <v-spacer></v-spacer>
                     <v-text-field
                         class="mt-5 px-4"
@@ -51,8 +63,10 @@
                                         <v-row>
                                             <v-col cols="12" sm="6" md="4">
                                                 <v-text-field
+                                                    autofocus
                                                     :rules="roleRules"
                                                     error
+                                                    @keyup.enter="save"
                                                     v-model="editedItem.name"
                                                     label="Name"
                                                     prepend-icon="mdi-rename-box"
@@ -115,15 +129,12 @@
                     >mdi-delete</v-icon
                 >
             </template>
-            <template v-slot:no-data>
-                <v-btn color="primary" @click="initialize">Reset</v-btn>
-            </template>
         </v-data-table>
 
         <v-dialog v-model="deleteItemDialog" max-width="500px">
             <v-card>
                 <v-card-title>
-                    <span class="subheader">Delete Role?</span>
+                    <span class="subheader">{{ deleteModalTitle }}</span>
                 </v-card-title>
 
                 <v-card-actions>
@@ -151,6 +162,9 @@
 <script>
 export default {
     data: () => ({
+        deleteModalTitle: "Delete role?",
+        selectedRow: [],
+        selectedRowIndexForDelete: [],
         searchIt: "",
         valid: true,
         roleRules: [
@@ -204,10 +218,18 @@ export default {
 
     created() {
         this.loading = true;
-        this.initialize();
     },
 
     methods: {
+        selectAll(v) {
+            this.selectedRowIndexForDelete = [];
+            this.selectedRow = v.map(e => e.id);
+            v.forEach(row => {
+                this.selectedRowIndexForDelete.push(
+                    this.roles.data.indexOf(row)
+                );
+            });
+        },
         search(v) {
             if (v.length > 2) {
                 this.searchIt = v;
@@ -242,16 +264,27 @@ export default {
             this.dialog = true;
         },
         openModal(item) {
-            (this.deleteItemDialog = true), (this.toDelete = item.id);
+            if (!item.id) {
+                this.deleteModalTitle = "Delete selected roles?";
+                this.deleteItemDialog = true;
+                return;
+            }
+            this.deleteModalTitle = "Delete role?";
+            this.selectedRow = [];
+            this.selectedRowIndexForDelete = [];
+            this.deleteItemDialog = true;
+            this.toDelete = item.id;
             this.editedIndex = this.roles.data.indexOf(item);
         },
 
         deleteItem() {
-            let deletedIndex = this.editedIndex;
-            (this.deleteItemDialog = false),
-                (this.LoaderColor = "error"),
-                (this.saveTextLoader = "Role deleting...Please wait"),
-                (this.loadingloder = true),
+            this.deleteItemDialog = false;
+            this.LoaderColor = "error";
+            if (this.selectedRow.length == 0) {
+                let deletedIndex = this.editedIndex;
+
+                this.saveTextLoader = "Role deleting...Please wait";
+                this.loadingloder = true;
                 axios
                     .delete("/api/roles/delete/" + this.toDelete)
                     .then(res => {
@@ -260,6 +293,7 @@ export default {
                         this.snackbarClass = "red--text";
                         this.text = "Role Deleted!";
                         this.snackbar = true;
+                        this.toDelete = "";
                     })
                     .catch(err => {
                         this.loadingloder = false;
@@ -267,7 +301,38 @@ export default {
                         this.text = "Role Delete failed!";
                         this.snackbar = true;
                         console.dir(err);
+                        this.toDelete = "";
                     });
+            } else {
+                this.saveTextLoader = "Deleting selected...Please wait";
+                this.loadingloder = true;
+                axios
+                    .post("/api/roles/delete/selected", {
+                        selectedRole: this.selectedRow
+                    })
+                    .then(res => {
+                        this.selectedRow.forEach(value => {
+                            this.roles.data = this.roles.data.filter(
+                                v => v.id != value
+                            );
+                        });
+
+                        this.selectedRowIndexForDelete = [];
+                        this.selectedRow = [];
+                        this.loadingloder = false;
+                        this.snackbarClass = "red--text";
+                        this.text = "Selected roles deleted!";
+                        this.snackbar = true;
+                    })
+                    .catch(err => {
+                        this.selectedRowIndexForDelete = [];
+                        this.selectedRow = [];
+                        this.loadingloder = false;
+                        this.snackbarClass = "white--text";
+                        this.text = "Delete failed!";
+                        this.snackbar = true;
+                    });
+            }
         },
 
         close() {

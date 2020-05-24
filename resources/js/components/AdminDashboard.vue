@@ -146,13 +146,14 @@ export default {
                 .get("/api/logout/" + tk[0])
                 .then(res => {
                     localStorage.removeItem("token");
+                    localStorage.removeItem("logged");
                     localStorage.setItem("logout", true);
-                    this.$router.push({ name: "Login" });
+                    return this.$router.push({ name: "Login" });
                 })
                 .catch(err => {
                     localStorage.removeItem("token");
                     localStorage.setItem("logout", true);
-                    this.$router.push({ name: "Login" });
+                    return this.$router.push({ name: "Login" });
                 });
         }
     }

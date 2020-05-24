@@ -7,6 +7,7 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+
 class UserController extends Controller
 {
     public function login(Request $request){
@@ -19,8 +20,10 @@ class UserController extends Controller
         if($user){
             if(Hash::check($password, $user->password)){
                 $token = $user->createToken('my-token')->plainTextToken;
+                $adminCheck = $user->isAdmin();
                 return response()->json([
-                    'token'=> $token
+                    'token'=> $token,
+                    'isAdmin' => $adminCheck
                 ], 200);
             }else{
                 return response()->json(["message"=>"Email or Password is wrong"], 403);
@@ -32,12 +35,17 @@ class UserController extends Controller
     }
 
     public function verify(Request $req){
-        return $req->user();
+        $user = $req->user();
+        $isAdmin = $req->user()->role->name;
+        
+        return response()->json(['user' => $user, 'role' => $isAdmin]);
     }
 
     public function logout(Request $req, $auth){
        
         return $req->user()->tokens()->where("id", $auth)->delete();
     }
+
+    
 
 }

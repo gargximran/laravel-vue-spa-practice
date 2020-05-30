@@ -38,6 +38,31 @@ Route::group(['middleware' => ['auth:sanctum'], 'namespace' => 'Api'], function(
 
 
 
+    /**
+     * All user management
+     * add
+     * edit
+     * delete
+     * show
+     */
+    Route::get('/users', "UserController@index");
+    Route::post('/users', "UserController@store");
+    Route::post('users/update/{user}', "UserController@update");
+    Route::delete('users/delete/{user}', "UserController@destroy");
+    Route::post('users/delete/selected', "UserController@deleteSelected");
+
+    // Change role inline
+    Route::post('user/role/change', "UserController@inlineRoleChange");
+
+    //change image inline 
+    Route::post('user/image/upload', "UserController@imageUpload");
+
+
+    //email verify
+    Route::post('email/verify', "UserController@emailVerify");
+
+
+
 
     /**
      * Here the route are for user control

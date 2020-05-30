@@ -21,7 +21,7 @@
             }"
         >
             <template v-slot:top>
-                <v-toolbar flat color="secondary ">
+                <v-toolbar flat>
                     <v-toolbar-title>User Roles</v-toolbar-title>
                     <v-divider class="mx-4" inset vertical></v-divider>
                     <v-btn
@@ -38,17 +38,12 @@
                         class="mt-5 px-4"
                         label="Search..."
                         @input="search"
-                        error
+                        append-icon="mdi-magnify"
+                        @click:append="search"
                     ></v-text-field>
                     <v-dialog v-model="dialog" max-width="500px">
                         <template v-slot:activator="{ on }">
-                            <v-btn
-                                color="gray darken-4"
-                                dark
-                                class="mb-2"
-                                v-on="on"
-                                >New Role</v-btn
-                            >
+                            <v-btn class="mb-2" v-on="on">New Role</v-btn>
                         </template>
                         <v-form lazy-validation v-model="valid" ref="roleForm">
                             <v-card>
@@ -63,9 +58,7 @@
                                         <v-row>
                                             <v-col cols="12" sm="6" md="4">
                                                 <v-text-field
-                                                    autofocus
                                                     :rules="roleRules"
-                                                    error
                                                     @keyup.enter="save"
                                                     v-model="editedItem.name"
                                                     label="Name"

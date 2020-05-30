@@ -50,30 +50,19 @@
             </v-list>
         </v-navigation-drawer>
 
-        <v-app-bar app clipped-left color="red" dense>
+        <v-app-bar app clipped-left dense>
             <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-            <v-icon class="mx-4" large>
-                mdi-laravel
-            </v-icon>
+            <v-avatar size="25" tile color="secondary" class="mr-1">
+                <img src="/gxi.png" alt="alt" />
+            </v-avatar>
             <v-toolbar-title class="mr-12 align-center">
-                <span class="title">gXi - LaraVue</span>
+                <span class="title"> - LaraVue</span>
             </v-toolbar-title>
-            <v-spacer />
-            <v-row align="center" style="max-width: 650px">
-                <v-text-field
-                    :append-icon-cb="() => {}"
-                    placeholder="Search..."
-                    single-line
-                    append-icon="mdi-magnify"
-                    color="white"
-                    hide-details
-                />
-            </v-row>
         </v-app-bar>
 
         <v-content>
-            <v-container>
-                <v-row>
+            <v-container fluid>
+                <v-row no-gutters>
                     <v-col>
                         <router-view></router-view>
 
@@ -107,14 +96,7 @@ export default {
         theme: true,
         drawer: null,
         items: [
-            { icon: "mdi-trending-up", text: "Most Popular", path: "" },
-            {
-                icon: "mdi-youtube-subscription",
-                text: "Subscriptions",
-                path: ""
-            },
-            { icon: "mdi-history", text: "History", path: "" },
-            { icon: "mdi-playlist-play", text: "Playlists", path: "" },
+            { icon: "mdi-account", text: "Users", path: "/admin/users" },
             { icon: "mdi-teach", text: "Roles", path: "/admin/roles" }
         ],
         items2: [

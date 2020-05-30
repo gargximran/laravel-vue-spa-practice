@@ -6,7 +6,9 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use App\UserProfile;
 use App\Role;
 class User extends Authenticatable
 {
@@ -45,6 +47,15 @@ class User extends Authenticatable
 
     public function isAdmin(){
         return strtolower($this->role->name) == "admin";
+    }
+
+    public function userProfile(){
+        return $this->hasOne(UserProfile::class)->withDefault();
+    }
+
+
+    public function  getEmailAttribute($val){
+        return Str::lower($val);
     }
 
     

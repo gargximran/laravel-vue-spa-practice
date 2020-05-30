@@ -5,7 +5,7 @@
                 <v-row align="center" justify="center">
                     <v-col cols="12" sm="8" md="4">
                         <v-card class="elevation-12">
-                            <v-toolbar color="error" dark flat>
+                            <v-toolbar color="indigo lighten-2">
                                 <v-toolbar-title>Login</v-toolbar-title>
                                 <v-progress-linear
                                     :active="loading"
@@ -23,7 +23,6 @@
                                     :lazy-validation="false"
                                 >
                                     <v-text-field
-                                        color="error"
                                         label="Email"
                                         prepend-icon="mdi-account-circle"
                                         type="email"
@@ -35,7 +34,6 @@
                                     />
 
                                     <v-text-field
-                                        color="error"
                                         id="password"
                                         autocomplete
                                         v-on:keyup.enter="login"
@@ -62,8 +60,8 @@
                                 <v-btn
                                     type="submit"
                                     :loading="btnloading"
-                                    color="error"
                                     class="ml-4"
+                                    color="indigo"
                                     @click="login"
                                     >Login</v-btn
                                 >

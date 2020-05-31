@@ -10,6 +10,7 @@
             item-key="id"
             @pagination="paginate"
             :server-items-length="totalUserCount"
+            :items-per-page="10"
             :loading="loading"
             loading-text="Loading... Please wait"
             :footer-props="{
@@ -532,9 +533,13 @@ export default {
             this.itemsPerPage = e.itemsPerPage;
             this.pageNumber = e.page;
             this.loading = true;
+
             axios
                 .get("/api/users?page=" + e.page, {
-                    params: { per_page: e.itemsPerPage, search: this.searchIt }
+                    params: {
+                        per_page: e.itemsPerPage,
+                        search: this.searchIt
+                    }
                 })
                 .then(res => {
                     this.users = res.data.Users;

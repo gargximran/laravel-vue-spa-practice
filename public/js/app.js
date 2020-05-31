@@ -2416,9 +2416,15 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      totalRoleCount: 0,
+      currentPage: 0,
+      itemsPerPages: 0,
       deleteModalTitle: "Delete role?",
       selectedRow: [],
       selectedRowIndexForDelete: [],
@@ -2478,12 +2484,21 @@ __webpack_require__.r(__webpack_exports__);
   watch: {
     dialog: function dialog(val) {
       val || this.close();
+    },
+    totalRoleCount: function totalRoleCount(val) {
+      console.log(val);
     }
   },
   created: function created() {
     this.loading = true;
   },
   methods: {
+    indexFinder: function indexFinder(item) {
+      var itemPerPage = this.itemsPerPages;
+      var pageNumbeer = this.currentPage - 1;
+      var index = this.roles.data.indexOf(item) + 1;
+      return itemPerPage * pageNumbeer + index;
+    },
     selectAll: function selectAll(v) {
       var _this = this;
 
@@ -2515,6 +2530,8 @@ __webpack_require__.r(__webpack_exports__);
     paginate: function paginate(e) {
       var _this2 = this;
 
+      this.currentPage = e.page;
+      this.itemsPerPages = e.itemsPerPage;
       axios.get("/api/roles?page=" + e.page, {
         params: {
           per_page: e.itemsPerPage,
@@ -2522,6 +2539,7 @@ __webpack_require__.r(__webpack_exports__);
         }
       }).then(function (res) {
         _this2.roles = res.data.role;
+        _this2.totalRoleCount = res.data.role.total;
         _this2.loading = false;
       })["catch"](function (err) {
         if (err.response.status === 401) {
@@ -2561,6 +2579,7 @@ __webpack_require__.r(__webpack_exports__);
         axios["delete"]("/api/roles/delete/" + this.toDelete).then(function (res) {
           _this3.roles.data.splice(deletedIndex, 1);
 
+          _this3.totalRoleCount -= 1;
           _this3.loadingloder = false;
           _this3.snackbarClass = "red--text";
           _this3.text = "Role Deleted!";
@@ -2586,6 +2605,7 @@ __webpack_require__.r(__webpack_exports__);
             });
           });
 
+          _this3.totalRoleCount -= res.data;
           _this3.selectedRowIndexForDelete = [];
           _this3.selectedRow = [];
           _this3.loadingloder = false;
@@ -2638,12 +2658,18 @@ __webpack_require__.r(__webpack_exports__);
             console.dir(err);
           });
         } else {
-          this.LoaderColor = "primary", this.saveTextLoader = "New role creating...Please wait";
+          var pageDetail = [this.itemsPerPages, this.currentPage];
+          var totalPageCount = Math.floor(this.totalRoleCount / pageDetail[0]) + 1;
+          this.LoaderColor = "primary";
+          this.saveTextLoader = "New role creating...Please wait";
           axios.post("/api/roles", {
             name: this.editedItem.name
           }).then(function (res) {
-            _this5.roles.data.push(res.data.role);
+            if (totalPageCount == pageDetail[1]) {
+              _this5.roles.data.push(res.data.role);
+            }
 
+            _this5.totalRoleCount += 1;
             _this5.loadingloder = false;
             _this5.snackbarClass = "indigo--text";
             _this5.text = "Role added succesfully";
@@ -2677,6 +2703,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+//
 //
 //
 //
@@ -21629,7 +21656,7 @@ var render = function() {
           items: _vm.roles.data,
           "sort-by": "calories",
           "item-key": "id",
-          "server-items-length": _vm.roles.total,
+          "server-items-length": _vm.totalRoleCount,
           loading: _vm.loading,
           "loading-text": "Loading... Please wait",
           "footer-props": {
@@ -21932,6 +21959,19 @@ var render = function() {
             proxy: true
           },
           {
+            key: "item.id",
+            fn: function(ref) {
+              var item = ref.item
+              return [
+                _vm._v(
+                  "\n            " +
+                    _vm._s(_vm.indexFinder(item)) +
+                    "\n        "
+                )
+              ]
+            }
+          },
+          {
             key: "item.actions",
             fn: function(ref) {
               var item = ref.item
@@ -22066,6 +22106,7 @@ var render = function() {
           items: _vm.users.data,
           "item-key": "id",
           "server-items-length": _vm.totalUserCount,
+          "items-per-page": 10,
           loading: _vm.loading,
           "loading-text": "Loading... Please wait",
           "footer-props": {

@@ -10,7 +10,7 @@
             class="elevation-1"
             item-key="id"
             @pagination="paginate"
-            :server-items-length="roles.total"
+            :server-items-length="totalRoleCount"
             :loading="loading"
             loading-text="Loading... Please wait"
             :footer-props="{
@@ -114,6 +114,9 @@
                     </v-btn>
                 </v-snackbar>
             </template>
+            <template v-slot:item.id="{ item }">
+                {{ indexFinder(item) }}
+            </template>
             <template v-slot:item.actions="{ item }">
                 <v-icon small class="indigo--text mr-2" @click="editItem(item)"
                     >mdi-pencil</v-icon
@@ -155,6 +158,9 @@
 <script>
 export default {
     data: () => ({
+        totalRoleCount: 0,
+        currentPage: 0,
+        itemsPerPages: 0,
         deleteModalTitle: "Delete role?",
         selectedRow: [],
         selectedRowIndexForDelete: [],
@@ -206,6 +212,9 @@ export default {
     watch: {
         dialog(val) {
             val || this.close();
+        },
+        totalRoleCount(val) {
+            console.log(val);
         }
     },
 
@@ -214,6 +223,12 @@ export default {
     },
 
     methods: {
+        indexFinder(item) {
+            let itemPerPage = this.itemsPerPages;
+            let pageNumbeer = this.currentPage - 1;
+            let index = this.roles.data.indexOf(item) + 1;
+            return itemPerPage * pageNumbeer + index;
+        },
         selectAll(v) {
             this.selectedRowIndexForDelete = [];
             this.selectedRow = v.map(e => e.id);
@@ -236,12 +251,15 @@ export default {
         },
 
         paginate(e) {
+            this.currentPage = e.page;
+            this.itemsPerPages = e.itemsPerPage;
             axios
                 .get("/api/roles?page=" + e.page, {
                     params: { per_page: e.itemsPerPage, search: this.searchIt }
                 })
                 .then(res => {
                     this.roles = res.data.role;
+                    this.totalRoleCount = res.data.role.total;
                     this.loading = false;
                 })
                 .catch(err => {
@@ -282,6 +300,7 @@ export default {
                     .delete("/api/roles/delete/" + this.toDelete)
                     .then(res => {
                         this.roles.data.splice(deletedIndex, 1);
+                        this.totalRoleCount -= 1;
                         this.loadingloder = false;
                         this.snackbarClass = "red--text";
                         this.text = "Role Deleted!";
@@ -309,6 +328,7 @@ export default {
                                 v => v.id != value
                             );
                         });
+                        this.totalRoleCount -= res.data;
 
                         this.selectedRowIndexForDelete = [];
                         this.selectedRow = [];
@@ -367,13 +387,19 @@ export default {
                             console.dir(err);
                         });
                 } else {
-                    (this.LoaderColor = "primary"),
-                        (this.saveTextLoader =
-                            "New role creating...Please wait");
+                    let pageDetail = [this.itemsPerPages, this.currentPage];
+                    let totalPageCount =
+                        Math.floor(this.totalRoleCount / pageDetail[0]) + 1;
+                    this.LoaderColor = "primary";
+                    this.saveTextLoader = "New role creating...Please wait";
                     axios
                         .post("/api/roles", { name: this.editedItem.name })
                         .then(res => {
-                            this.roles.data.push(res.data.role);
+                            if (totalPageCount == pageDetail[1]) {
+                                this.roles.data.push(res.data.role);
+                            }
+
+                            this.totalRoleCount += 1;
                             this.loadingloder = false;
 
                             this.snackbarClass = "indigo--text";

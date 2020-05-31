@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Role;
+use App\User;
+use App\UserProfile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class RollController extends Controller
 {
@@ -84,10 +87,36 @@ class RollController extends Controller
      */
     public function destroy(Role $role)
     {
+        $allusers = User::where('role_id', $role->id)->get();
+        foreach($allusers as $user){
+            $profile = UserProfile::where('user_id', $user->id)->first();
+            $profile->delete();
+            if($profile->image != 'image/user/no-image.png'){
+                if(File::exists($profile->image)){
+                    File::delete($profile->image);
+                }
+            }
+            $user->delete();
+        }
         return $role->delete();
     }
 
     public function selectedDestroy(Request $req){
+
+        foreach($req->selectedRole as $role){
+            $allusers = User::where('role_id', $role)->get();
+            foreach($allusers as $user){
+            $profile = UserProfile::where('user_id', $user->id)->first();
+            if($profile->image != 'image/user/no-image.png'){
+                if(File::exists($profile->image)){
+                    File::delete($profile->image);
+                }
+            }
+            $profile->delete();
+            $user->delete();
+        }
+        }
+
         return Role::whereIn("id", $req->selectedRole)->delete();
     }
 }

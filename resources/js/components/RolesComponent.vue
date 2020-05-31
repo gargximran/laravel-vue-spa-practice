@@ -188,9 +188,9 @@ export default {
                 sortable: false,
                 value: "id"
             },
-            { text: "Name", value: "name" },
-            { text: "Created at", value: "created_at" },
-            { text: "Updated at", value: "updated_at" },
+            { text: "Name", value: "name", sortable: false },
+            { text: "Created at", value: "created_at", sortable: false },
+            { text: "Updated at", value: "updated_at", sortable: false },
             { text: "Actions", value: "actions", sortable: false }
         ],
         roles: [],

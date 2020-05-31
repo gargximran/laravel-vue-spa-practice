@@ -2454,13 +2454,16 @@ __webpack_require__.r(__webpack_exports__);
         value: "id"
       }, {
         text: "Name",
-        value: "name"
+        value: "name",
+        sortable: false
       }, {
         text: "Created at",
-        value: "created_at"
+        value: "created_at",
+        sortable: false
       }, {
         text: "Updated at",
-        value: "updated_at"
+        value: "updated_at",
+        sortable: false
       }, {
         text: "Actions",
         value: "actions",

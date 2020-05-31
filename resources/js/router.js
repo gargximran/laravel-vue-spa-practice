@@ -70,7 +70,7 @@ const routes = [
     }
 ];
 
-const router = new VueRouter({ routes });
+const router = new VueRouter({ routes, mode: 'history' });
 
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem("token") || null;

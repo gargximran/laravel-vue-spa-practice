@@ -212,9 +212,6 @@ export default {
     watch: {
         dialog(val) {
             val || this.close();
-        },
-        totalRoleCount(val) {
-            console.log(val);
         }
     },
 

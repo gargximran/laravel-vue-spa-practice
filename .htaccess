@@ -1,15 +1,19 @@
 
-
-
-
-
-
-
-
-
-
 <IfModule mod_rewrite.c>
-    RewriteEngine on
-    RewriteCond %{REQUEST_URI} !^public
-    RewriteRule . /index.html [L]
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
+
+
+
+
+
+
+
+
+
+

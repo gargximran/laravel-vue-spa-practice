@@ -17,6 +17,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('{path}', function(){
+Route::get("{path}", function(){
     return view('welcome');
 })->where('path', '([A-z\d-\/_.]+)?' );

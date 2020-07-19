@@ -177,7 +177,7 @@ class UserController extends Controller
         $imageName = Str::random(20).".png";
         $imageUpload = Image::make($imageFile);
         $imageUpload->encode("png", 90);
-        $imageUpload->save(public_path('image\user\\'.$imageName));
+        $imageUpload->save(public_path('image\\user\\'.$imageName));
 
 
         $profile->image = "image/user/".$imageName;
